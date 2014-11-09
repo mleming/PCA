@@ -1,4 +1,4 @@
-function out_pdm = ASMEllipsoid( Fx, Fy, Fz, eigenmodes, principle_standard_deviations, initial_pdm, center_point, polarity,north, south, east, west )
+function out_pdm = ASMEllipsoid( Fx, Fy, Fz, eigenmodes, principle_standard_deviations, initial_pdm, center_point, polarity,north, south, east, west, interpolate_0_round_1 )
 % Matthew Leming
 % Active Shape Modelling for the input ellipsoid PDM and eigenmodes
 % This method ought to be run multiple times. It moves a PDM out into an
@@ -31,22 +31,32 @@ end
 new_pdm = [];
 
 for i=1:size(outward_vector_list,2)
-    best_grad_unround = initial_xyz(i,:)+ outward_vector_list(:,i)';
+    best_grad_unround = initial_xyz(i,:)+outward_vector_list(:,i)';
     best_grad = round(best_grad_unround);
     for j=-6:6
         % This stands for "potential gradient"
         pot_grad_unround = initial_xyz(i,:) + ((j)*outward_vector_list(:,i))';
         pot_grad = round(pot_grad_unround);
-        if pot_grad(1) + cx > 0 && pot_grad(1) + cx < 129 && pot_grad(2) + cy > 0 && pot_grad(2) + cy < 129 && pot_grad(3) + cz > 0 && pot_grad(3) + cz < 129 ...
-            && best_grad(1) + cx > 0 && best_grad(1) + cx < 129 && best_grad(2) + cy > 0 && best_grad(2) + cy < 129 && best_grad(3) + cz > 0 && best_grad(3) + cz < 129
+        if floor(pot_grad_unround(1)) + cx > 0 && ceil(pot_grad_unround(1)) + cx < 128 && floor(pot_grad_unround(2)) + cy > 0 && ceil(pot_grad_unround(2)) + cy < 128 && floor(pot_grad_unround(3)) + cz > 0 && ceil(pot_grad_unround(3)) + cz < 128 ...
+            && floor(best_grad_unround(1)) + cx > 0 && ceil(best_grad_unround(1)) + cx < 128 && floor(best_grad_unround(2)) + cy > 0 && ceil(best_grad_unround(2)) + cy < 128 && floor(best_grad_unround(3)) + cz > 0 && ceil(best_grad_unround(3)) + cz < 128
 
-            best_vector = [Fx(best_grad(1)+cx, best_grad(2) + cz, best_grad(3) + cz) ...
-                Fy(best_grad(1)+cx, best_grad(2) + cz, best_grad(3) + cz) ...
-                Fz(best_grad(1)+cx, best_grad(2) + cz, best_grad(3) + cz)];
+            if interpolate_0_round_1 == 1
+            best_vector = [Fx(best_grad(1)+cx, best_grad(2) + cy, best_grad(3) + cz) ...
+                Fy(best_grad(1)+cx, best_grad(2) + cy, best_grad(3) + cz) ...
+                Fz(best_grad(1)+cx, best_grad(2) + cy, best_grad(3) + cz)];
             pot_vector = [Fx(pot_grad(1)+cx,pot_grad(2)+cy,pot_grad(3)+cz) ...
                 Fy(pot_grad(1)+cx,pot_grad(2)+cy,pot_grad(3)+cz) ...
                 Fz(pot_grad(1)+cx,pot_grad(2)+cy,pot_grad(3)+cz)];
-            if abs(dot(best_vector, outward_vector_list(:,i))) < abs(dot(pot_vector, outward_vector_list(:,i)))
+            else
+            best_vector = [interpolateOnGradient(Fx,best_grad_unround(1)+cx, best_grad_unround(2) + cy, best_grad_unround(3) + cz) ...
+                           interpolateOnGradient(Fy,best_grad_unround(1)+cx, best_grad_unround(2) + cy, best_grad_unround(3) + cz) ...
+                           interpolateOnGradient(Fz,best_grad_unround(1)+cx, best_grad_unround(2) + cy, best_grad_unround(3) + cz)];
+            pot_vector  = [interpolateOnGradient(Fx,pot_grad_unround(1)+cx,pot_grad_unround(2)+cy,pot_grad_unround(3)+cz) ...
+                           interpolateOnGradient(Fy,pot_grad_unround(1)+cx,pot_grad_unround(2)+cy,pot_grad_unround(3)+cz) ...
+                           interpolateOnGradient(Fz,pot_grad_unround(1)+cx,pot_grad_unround(2)+cy,pot_grad_unround(3)+cz)];
+            end
+            pp = [outward_vector_list(1,i) outward_vector_list(2,i) outward_vector_list(3,i)];
+            if (polarity-0.5)*abs(dot(best_vector, pp)) < (polarity-0.5)*abs(dot(pot_vector, pp))
                 best_grad = pot_grad;
                 best_grad_unround = pot_grad_unround;
             end
@@ -83,7 +93,6 @@ out_pdm = sum(eigendots')';
 out_pdm(1:3:end) = out_pdm(1:3:end) + mean_x;
 out_pdm(2:3:end) = out_pdm(2:3:end) + mean_y;
 out_pdm(3:3:end) = out_pdm(3:3:end) + mean_z;
-
 
 end
 

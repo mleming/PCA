@@ -20,9 +20,9 @@ zrange = 128;
 cx = normrnd(cx, center_stddev);
 cy = normrnd(cy, center_stddev);
 cz = normrnd(cz, center_stddev);
-rx = normrnd(rx, (rx/10));
-ry = normrnd(ry, (ry/10));
-rz = normrnd(rz, (rz/10));
+rx = normrnd(rx, radii_stddev*(rx/10));
+ry = normrnd(ry, radii_stddev*(ry/10));
+rz = normrnd(rz, radii_stddev*(rz/10));
 
 x_axis = [1 0 0];
 y_axis = [0 1 0];
@@ -42,14 +42,15 @@ rotation_matrix = [x_axis' y_axis' z_axis'];
 rotation_matrix = [1 0 0; 0 cos(x_rot) -sin(x_rot); 0 sin(x_rot) cos(x_rot)] * rotation_matrix;
 rotation_matrix = [cos(y_rot) 0 sin(y_rot); 0 1 0; -sin(y_rot) 0 cos(y_rot)] * rotation_matrix;
 rotation_matrix = [cos(z_rot) -sin(z_rot) 0; sin(z_rot) cos(z_rot) 0; 0 0 1] * rotation_matrix;
-
 pts_xyz = [pts2(1:3:end) pts2(2:3:end) pts2(3:3:end)];
 new_pts_xyz = [];
 for i=1:size(pts_xyz,1)
-    a = [[pts_xyz(i,1)/45 pts_xyz(i,2)/27 pts_xyz(i,3)/18]*rotation_matrix];
-    x=a(1)*rx + cx;
-    y=a(2)*ry + cy;
-    z=a(3)*rz + cz;
+    %a = [[pts_xyz(i,1)/52.84 pts_xyz(i,2)/31.71 pts_xyz(i,3)/21.14]*rotation_matrix];
+    a = [normr([pts_xyz(i,1) pts_xyz(i,2) pts_xyz(i,3)])*rotation_matrix];
+
+    x=(a(1))*rx + cx;
+    y=(a(2))*ry + cy;
+    z=(a(3))*rz + cz;
     new_pts_xyz = [new_pts_xyz [x y z]];
 end
 %new_pts_xyz = normrnd(new_pts_xyz, 0.5);

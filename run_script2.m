@@ -45,7 +45,6 @@ load('matlab_variables/west.mat');
 % Gaussian smooth and noise
 %image = smooth3(image, 'gaussian', 3, min([rx ry rz])/2);
 %image = imnoise(image, 'gaussian', 0, 0.01);
-% image = imageD;
 % Write the image
 %writeMETA(image,'test_cases/testA');
 
